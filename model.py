@@ -1,4 +1,4 @@
-# import torch
+import torch
 
 from transformers import DistilBertModel
 from torch import nn, Tensor
@@ -32,8 +32,12 @@ class SentiDistilBert(nn.Module):
         self.sigmoid = nn.Sigmoid()
         self.softmax = nn.Softmax(dim=1)
         
-    def forward(self, input_ids: Tensor, attention_mask: Tensor) -> Tensor:
-        output = self._bert.forward(input_ids, attention_mask)
+    def forward(self, input_ids: Tensor, attention_mask: Tensor, bert_no_grad: bool=True) -> Tensor:
+        if bert_no_grad:
+            with torch.no_grad():
+                output = self._bert.forward(input_ids, attention_mask)
+        else:
+            output = self._bert.forward(input_ids, attention_mask)
         output = self.dropout(output.last_hidden_state[:, 0, :])
         output = self.linear(output)
         output = self.sigmoid(output)
